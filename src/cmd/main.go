@@ -18,6 +18,8 @@ func main() {
 	router.GET("/tasks", handler.TaskHander{}.Index)
 	router.GET("/tasks/:id", handler.TaskHander{}.Show)
 	router.POST("/tasks", handler.TaskHander{}.Create)
+	router.PUT("/tasks/:id", handler.TaskHander{}.Update)
+	router.DELETE("/tasks/:id", handler.TaskHander{}.Delete)
 
 	router.Run("0.0.0.0:8080")
 }
