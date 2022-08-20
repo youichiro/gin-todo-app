@@ -8,13 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TaskIndex(c *gin.Context) {
+type TaskHander struct{}
+
+type Task model.Task
+
+func (t TaskHander) Index(c *gin.Context) {
 	sqlDB, db := client.ProvidePostgreSqlClient()
 	defer sqlDB.Close()
 
-	tasks, err := model.Task{}.All(db)
-	if err != nil {
+	var tasks []Task
+	if err := db.Find(&tasks).Error; err != nil {
 		panic(err)
 	}
+
 	c.IndentedJSON(http.StatusOK, tasks)
 }
