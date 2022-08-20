@@ -1,5 +1,4 @@
-# web-service-gin
-go web service practice
+# go-todo-app
 
 ## run migrate
 for development db
