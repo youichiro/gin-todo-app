@@ -16,5 +16,8 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/tasks", handler.TaskHander{}.Index)
+	router.GET("/tasks/:id", handler.TaskHander{}.Show)
+	router.POST("/tasks", handler.TaskHander{}.Create)
+
 	router.Run("0.0.0.0:8080")
 }
