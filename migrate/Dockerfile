@@ -5,4 +5,4 @@ RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 
 WORKDIR /opt/migrate
 
-CMD bash
+CMD echo "hello migrate"

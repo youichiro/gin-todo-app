@@ -21,18 +21,5 @@ services:
     environment:
       - POSTGRESQL_URL="postgres://postgres:postgres@postgres:5432/go_todo_app_${GO_ENV}?sslmode=disable"
 
-  web:
-    build:
-      context: .
-      target: runner
-    volumes:
-      - ./src/:/opt/myapp/
-    working_dir: /opt/myapp/cmd
-    ports:
-      - 8080:8080
-    environment:
-      - POSTGRESQL_URL="postgres://postgres:postgres@postgres:5432/go_todo_app_${GO_ENV}?sslmode=disable"
-    command: go run main.go
-
 volumes:
   db_data:
