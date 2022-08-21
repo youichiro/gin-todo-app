@@ -2,10 +2,9 @@ package main
 
 import (
 	"example/web-service-gin/internal/client"
-	"example/web-service-gin/internal/handler"
+	"example/web-service-gin/internal/router"
 	"log"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -19,12 +18,6 @@ func main() {
 	db.Connect()
 	defer db.Close()
 
-	router := gin.Default()
-	router.GET("/tasks", handler.TaskHander{}.Index)
-	router.GET("/tasks/:id", handler.TaskHander{}.Show)
-	router.POST("/tasks", handler.TaskHander{}.Create)
-	router.PUT("/tasks/:id", handler.TaskHander{}.Update)
-	router.DELETE("/tasks/:id", handler.TaskHander{}.Delete)
-
-	router.Run("0.0.0.0:8080")
+	r := router.SetupRouter()
+	r.Run("0.0.0.0:8080")
 }
