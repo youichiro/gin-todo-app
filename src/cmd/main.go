@@ -1,6 +1,7 @@
 package main
 
 import (
+	"example/web-service-gin/internal/client"
 	"example/web-service-gin/internal/handler"
 	"log"
 
@@ -13,6 +14,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	db := client.PostgresClientProvider{}
+	db.Connect()
+	defer db.Close()
 
 	router := gin.Default()
 	router.GET("/tasks", handler.TaskHander{}.Index)

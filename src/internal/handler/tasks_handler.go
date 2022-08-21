@@ -12,11 +12,8 @@ type TaskHander struct{}
 type Task model.Task
 
 func (t TaskHander) Index(c *gin.Context) {
-	sqlDB, db := client.ProvidePostgreSqlClient()
-	defer sqlDB.Close()
-
 	var tasks []Task
-	if err := db.Find(&tasks).Error; err != nil {
+	if err := client.DB.Find(&tasks).Error; err != nil {
 		c.IndentedJSON(404, gin.H{"message": "task not found"})
 		return
 	}
@@ -25,13 +22,10 @@ func (t TaskHander) Index(c *gin.Context) {
 }
 
 func (t TaskHander) Show(c *gin.Context) {
-	sqlDB, db := client.ProvidePostgreSqlClient()
-	defer sqlDB.Close()
-
 	id := c.Params.ByName("id")
-
 	var task Task
-	if err := db.Where("id = ?", id).First(&task).Error; err != nil {
+
+	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
@@ -40,15 +34,12 @@ func (t TaskHander) Show(c *gin.Context) {
 }
 
 func (t TaskHander) Create(c *gin.Context) {
-	sqlDB, db := client.ProvidePostgreSqlClient()
-	defer sqlDB.Close()
-
 	var task Task
 	if err := c.BindJSON(&task); err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
-	if err := db.Create(&task).Error; err != nil {
+	if err := client.DB.Create(&task).Error; err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
@@ -57,13 +48,10 @@ func (t TaskHander) Create(c *gin.Context) {
 }
 
 func (t TaskHander) Update(c *gin.Context) {
-	sqlDB, db := client.ProvidePostgreSqlClient()
-	defer sqlDB.Close()
-
 	id := c.Params.ByName("id")
-
 	var task Task
-	if err := db.Where("id = ?", id).First(&task).Error; err != nil {
+
+	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
@@ -71,7 +59,7 @@ func (t TaskHander) Update(c *gin.Context) {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
-	if err := db.Save(&task).Error; err != nil {
+	if err := client.DB.Save(&task).Error; err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
@@ -79,18 +67,15 @@ func (t TaskHander) Update(c *gin.Context) {
 }
 
 func (t TaskHander) Delete(c *gin.Context) {
-	sqlDB, db := client.ProvidePostgreSqlClient()
-	defer sqlDB.Close()
-
 	id := c.Params.ByName("id")
-
 	var task Task
-	if err := db.Where("id = ?", id).First(&task).Error; err != nil {
+
+	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
 
-	if err := db.Delete(&task).Error; err != nil {
+	if err := client.DB.Delete(&task).Error; err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
