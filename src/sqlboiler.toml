@@ -1,0 +1,8 @@
+[psql]
+  dbname = "go_todo_app_development"
+  host = "localhost"
+  port = 5432
+  user = "postgres"
+  pass = "postgres"
+  blacklist = ["schema_migrations"]
+  sslmode = "disable"
