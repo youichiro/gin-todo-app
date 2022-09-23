@@ -46,9 +46,8 @@ func TestRootRoute(t *testing.T) {
 
 func TestTasksRoute(t *testing.T) {
 	var tasks []models.Task
-	db := client.PostgresClientProvider{}
-	db.Connect("development")
-	defer db.Close()
+	client.Connect("development")
+	defer client.DB.Close()
 
 	s := httptest.NewServer(SetupRouter())
 	res, err := http.Get(s.URL + "/tasks")

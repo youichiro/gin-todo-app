@@ -11,9 +11,7 @@ import (
 
 var DB *sql.DB
 
-type PostgresClientProvider struct{}
-
-func (p PostgresClientProvider) Connect(env string) {
+func Connect(env string) {
 	host := os.Getenv("DB_HOST")
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
@@ -33,8 +31,8 @@ func (p PostgresClientProvider) Connect(env string) {
 	DB = db
 }
 
-func (p PostgresClientProvider) Close() {
-	if err := DB.Close(); err != nil {
-		panic(err)
-	}
-}
+// func (p PostgresClientProvider) Close() {
+// 	if err := DB.Close(); err != nil {
+// 		panic(err)
+// 	}
+// }
