@@ -3,8 +3,9 @@ package client
 import (
 	"database/sql"
 
-	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/boil"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 var DB *sql.DB
