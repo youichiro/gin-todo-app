@@ -2,6 +2,7 @@ package client
 
 import (
 	"database/sql"
+	"os"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -12,7 +13,13 @@ var DB *sql.DB
 type PostgresClientProvider struct{}
 
 func (p PostgresClientProvider) Connect(env string) {
-	db, err := sql.Open("pgx", "host=localhost user=postgres password=postgres dbname=go_todo_app_"+env+" port=5432 sslmode=disable TimeZone=Asia/Tokyo")
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	port := os.Getenv("DB_PORT")
+	dbname := "go_todo_app_" + env
+	dsn := "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=disable TimeZone=Asia/Tokyo"
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		panic(err)
 	}

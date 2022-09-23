@@ -54,5 +54,5 @@ https://github.com/volatiletech/sqlboiler
 
 ```sh
 cd src
-sqlboiler psql --no-tests --wipe
+sqlboiler psql
 ```
