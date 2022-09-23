@@ -48,3 +48,11 @@ curl http://localhost:8080
   "message": "hello world!"
 }
 ```
+
+## generate models
+https://github.com/volatiletech/sqlboiler
+
+```sh
+cd src
+sqlboiler psql --no-tests --wipe
+```
