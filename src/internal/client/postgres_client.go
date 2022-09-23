@@ -2,6 +2,7 @@ package client
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/volatiletech/sqlboiler/boil"
 
@@ -20,6 +21,7 @@ func (p PostgresClientProvider) Connect(env string) {
 
 	db.SetMaxOpenConns(2)
 	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(time.Hour)
 
 	boil.SetDB(db)
 	boil.DebugMode = true
