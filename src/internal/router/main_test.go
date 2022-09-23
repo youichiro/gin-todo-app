@@ -3,7 +3,7 @@ package router
 import (
 	"encoding/json"
 	"example/web-service-gin/internal/client"
-	"example/web-service-gin/models"
+	"example/web-service-gin/internal/models"
 	"fmt"
 	"io"
 	"net/http"

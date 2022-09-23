@@ -3,4 +3,4 @@ seed:
 psql:
 	psql -h localhost -p 5432 -U postgres go_todo_app_development
 sqlboiler:
-	cd src && sqlboiler psql --no-tests --wipe
+	cd src && sqlboiler psql

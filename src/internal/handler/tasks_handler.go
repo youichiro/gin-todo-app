@@ -2,7 +2,7 @@ package handler
 
 import (
 	"example/web-service-gin/internal/client"
-	"example/web-service-gin/models"
+	"example/web-service-gin/internal/models"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

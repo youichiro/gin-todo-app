@@ -14,7 +14,7 @@ var DB *sql.DB
 type PostgresClientProvider struct{}
 
 func (p PostgresClientProvider) Connect(env string) {
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=go_todo_app_"+env+" port=5432 sslmode=disable TimeZone=Asia/Tokyo")
+	db, err := sql.Open("pgx", "host=localhost user=postgres password=postgres dbname=go_todo_app_"+env+" port=5432 sslmode=disable TimeZone=Asia/Tokyo")
 	if err != nil {
 		panic(err)
 	}
