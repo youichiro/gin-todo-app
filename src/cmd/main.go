@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 func main() {
@@ -16,6 +17,8 @@ func main() {
 	}
 
 	env := os.Getenv("GO_ENV")
+
+	boil.DebugMode = true // なぜか効かない
 	db := client.PostgresClientProvider{}
 	db.Connect(env)
 	defer db.Close()

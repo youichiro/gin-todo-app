@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/volatiletech/sqlboiler/boil"
-
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
@@ -23,8 +21,6 @@ func (p PostgresClientProvider) Connect(env string) {
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxLifetime(time.Hour)
 
-	boil.SetDB(db)
-	boil.DebugMode = true
 	DB = db
 }
 
@@ -32,8 +28,4 @@ func (p PostgresClientProvider) Close() {
 	if err := DB.Close(); err != nil {
 		panic(err)
 	}
-}
-
-func (p PostgresClientProvider) Set(db *sql.DB) {
-	DB = db
 }

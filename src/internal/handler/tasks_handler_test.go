@@ -9,21 +9,15 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/volatiletech/sqlboiler/boil"
 )
 
 func TestTaskHandlerIndex(t *testing.T) {
-	db := client.PostgresClientProvider{}
-	db.Connect("test")
-	defer db.Close()
-
 	mockDB, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer mockDB.Close()
 
 	// Inject mock instance into boil.
-	boil.SetDB(mockDB)
-	db.Set(mockDB)
+	client.DB = mockDB
 
 	rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "hoge", false)
 	query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks";`)
