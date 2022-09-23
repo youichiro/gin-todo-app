@@ -4,6 +4,7 @@ import (
 	"example/web-service-gin/internal/client"
 	"example/web-service-gin/internal/router"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -14,8 +15,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	env := os.Getenv("GO_ENV")
 	db := client.PostgresClientProvider{}
-	db.Connect()
+	db.Connect(env)
 	defer db.Close()
 
 	r := router.SetupRouter()
