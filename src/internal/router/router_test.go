@@ -6,14 +6,32 @@ import (
 	"example/web-service-gin/internal/models"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
-type Task models.Task
+func TestMain(m *testing.M) {
+	setup()
+	defer teardown()
+	m.Run()
+}
+
+func setup() {
+	fmt.Println("setup")
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
+
+func teardown() {
+	fmt.Println("teardown")
+}
 
 func TestRootRoute(t *testing.T) {
 	r := SetupRouter()
@@ -27,22 +45,19 @@ func TestRootRoute(t *testing.T) {
 }
 
 func TestTasksRoute(t *testing.T) {
-	var tasks []Task
-	client.Connect("development")
-	defer client.DB.Close()
+	var tasks []models.Task
+	db := client.PostgresClientProvider{}
+	db.Connect("development")
+	defer db.Close()
 
 	s := httptest.NewServer(SetupRouter())
 	res, err := http.Get(s.URL + "/tasks")
-	if err != nil {
-		t.Errorf("http get err should be nil: %v", err)
-	}
+	assert.NoError(t, err)
 	defer res.Body.Close()
 
 	assert.Equal(t, 200, res.StatusCode)
 	body, _ := io.ReadAll(res.Body)
-	if err := json.Unmarshal(body, &tasks); err != nil {
-		fmt.Println(err)
-		return
-	}
+	err = json.Unmarshal(body, &tasks)
+	assert.NoError(t, err)
 	assert.Equal(t, "sample task1", tasks[0].Title)
 }
