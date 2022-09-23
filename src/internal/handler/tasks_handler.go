@@ -30,6 +30,7 @@ func (t TaskHander) Index(c *gin.Context) {
 }
 
 func (t TaskHander) Show(c *gin.Context) {
+	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 	task, err := models.FindTask(c, client.DB, id)
 	if err != nil {
