@@ -26,3 +26,25 @@ GO_ENV=test docker compose run --rm migrate make down
 ```sh
 docker compose run --rm migrate make create ARG=<seq>
 ```
+
+## run test
+```sh
+cd src
+go test -v ./...
+
+# 特定のパッケージを指定する
+go test -v ./path/to/package
+```
+
+## run server
+```sh
+cd src/cmd
+go run main.go
+curl http://localhost:8080
+```
+
+```
+{
+  "message": "hello world!"
+}
+```
