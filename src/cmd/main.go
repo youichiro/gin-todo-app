@@ -19,9 +19,8 @@ func main() {
 	env := os.Getenv("GO_ENV")
 
 	boil.DebugMode = true // なぜか効かない
-	db := client.PostgresClientProvider{}
-	db.Connect(env)
-	defer db.Close()
+	client.Connect(env)
+	defer client.DB.Close()
 
 	r := router.SetupRouter()
 	r.Run("0.0.0.0:8080")
