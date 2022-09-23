@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	_ "github.com/lib/pq"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 var DB *sql.DB
@@ -19,6 +20,8 @@ func (p PostgresClientProvider) Connect(env string) {
 	db.SetMaxOpenConns(2)
 	db.SetMaxIdleConns(2)
 
+	boil.SetDB(db)
+	boil.DebugMode = true
 	DB = db
 }
 
@@ -26,4 +29,8 @@ func (p PostgresClientProvider) Close() {
 	if err := DB.Close(); err != nil {
 		panic(err)
 	}
+}
+
+func (p PostgresClientProvider) Set(db *sql.DB) {
+	DB = db
 }

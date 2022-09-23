@@ -11,8 +11,6 @@ import (
 
 type TaskHander struct{}
 
-type Task models.Task
-
 type createParams struct {
 	Title string `json:"title"`
 }
@@ -22,6 +20,7 @@ type updateParams struct {
 }
 
 func (t TaskHander) Index(c *gin.Context) {
+	boil.DebugMode = true
 	tasks, err := models.Tasks().All(c, client.DB)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
