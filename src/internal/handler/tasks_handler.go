@@ -2,7 +2,6 @@ package handler
 
 import (
 	"example/web-service-gin/internal/client"
-	"example/web-service-gin/internal/model"
 	"example/web-service-gin/models"
 	"strconv"
 
@@ -12,7 +11,7 @@ import (
 
 type TaskHander struct{}
 
-type Task model.Task
+type Task models.Task
 
 type createParams struct {
 	Title string `json:"title"`

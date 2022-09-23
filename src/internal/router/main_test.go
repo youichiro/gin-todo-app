@@ -1,7 +1,7 @@
 package router
 
 import (
-	"example/web-service-gin/internal/model"
+	"example/web-service-gin/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Task model.Task
+type Task models.Task
 
 func TestRootRoute(t *testing.T) {
 	r := SetupRouter()
