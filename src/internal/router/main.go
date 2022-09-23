@@ -9,7 +9,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.GET("/hello", func(c *gin.Context) { c.IndentedJSON(200, gin.H{"message": "hello world!"}) })
+	r.GET("/", func(c *gin.Context) { c.IndentedJSON(200, gin.H{"message": "hello world!"}) })
 	r.GET("/tasks", handler.TaskHander{}.Index)
 	r.GET("/tasks/:id", handler.TaskHander{}.Show)
 	r.POST("/tasks", handler.TaskHander{}.Create)
