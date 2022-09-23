@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"example/web-service-gin/internal/client"
 	"fmt"
 	"net/http/httptest"
@@ -26,11 +27,15 @@ func teardown() {
 	fmt.Println("teardown")
 }
 
-func TestTaskHandlerIndex(t *testing.T) {
+func InitMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	mockDB, mock, err := sqlmock.New()
 	assert.NoError(t, err)
-	defer mockDB.Close()
 	client.DB = mockDB
+	return mockDB, mock
+}
+
+func TestTaskHandlerIndex(t *testing.T) {
+	mockDB, mock := InitMockDB(t); defer mockDB.Close()
 
 	rows := mock.NewRows([]string{"id", "title", "done"})
 	rows.AddRow(1, "dummy task1", false)
@@ -54,10 +59,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 }
 
 func TestTaskHandlerShow(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer mockDB.Close()
-	client.DB = mockDB
+	mockDB, mock := InitMockDB(t); defer mockDB.Close()
 
 	rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
 	query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
