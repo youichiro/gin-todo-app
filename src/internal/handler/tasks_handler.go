@@ -3,82 +3,104 @@ package handler
 import (
 	"example/web-service-gin/internal/client"
 	"example/web-service-gin/internal/model"
+	"example/web-service-gin/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type TaskHander struct{}
 
 type Task model.Task
 
+type createParams struct {
+	Title string `json:"title"`
+}
+
+type updateParams struct {
+	Title string `json:"title"`
+}
+
 func (t TaskHander) Index(c *gin.Context) {
-	var tasks []Task
-	if err := client.DB.Find(&tasks).Error; err != nil {
-		c.IndentedJSON(404, gin.H{"message": "task not found"})
+	tasks, err := models.Tasks().All(c, client.DB)
+	if err != nil {
+		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
-
 	c.IndentedJSON(200, tasks)
 }
 
 func (t TaskHander) Show(c *gin.Context) {
-	id := c.Params.ByName("id")
-	var task Task
-
-	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
+	id, _ := strconv.Atoi(c.Params.ByName("id"))
+	task, err := models.FindTask(c, client.DB, id)
+	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
-
 	c.IndentedJSON(200, task)
 }
 
 func (t TaskHander) Create(c *gin.Context) {
-	var task Task
-	if err := c.BindJSON(&task); err != nil {
+	var params createParams
+	err := c.BindJSON(&params)
+	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
-	if err := client.DB.Create(&task).Error; err != nil {
-		c.IndentedJSON(500, gin.H{"message": err.Error()})
-		return
+
+	task := &models.Task{
+		Title: params.Title,
+		Done:  false,
 	}
 
+	err = task.Insert(c, client.DB, boil.Infer())
+	if err != nil {
+		c.IndentedJSON(400, gin.H{"message": err.Error()})
+		return
+	}
 	c.IndentedJSON(201, task)
 }
 
 func (t TaskHander) Update(c *gin.Context) {
-	id := c.Params.ByName("id")
-	var task Task
+	id, _ := strconv.Atoi(c.Params.ByName("id"))
 
-	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
-		c.IndentedJSON(404, gin.H{"message": err.Error()})
-		return
-	}
-	if err := c.BindJSON(&task); err != nil {
+	var params updateParams
+	err := c.BindJSON(&params)
+	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
-	if err := client.DB.Save(&task).Error; err != nil {
-		c.IndentedJSON(500, gin.H{"message": err.Error()})
-		return
-	}
-	c.IndentedJSON(200, task)
-}
 
-func (t TaskHander) Delete(c *gin.Context) {
-	id := c.Params.ByName("id")
-	var task Task
-
-	if err := client.DB.Where("id = ?", id).First(&task).Error; err != nil {
+	task, err := models.FindTask(c, client.DB, id)
+	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
 
-	if err := client.DB.Delete(&task).Error; err != nil {
+	task.Title = params.Title
+	_, err = task.Update(c, client.DB, boil.Infer())
+	if err != nil {
+		c.IndentedJSON(400, gin.H{"message": err.Error()})
+		return
+	}
+	c.IndentedJSON(200, gin.H{"message": "successfully updated"})
+}
+
+func (t TaskHander) Delete(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Params.ByName("id"))
+
+	task, err := models.FindTask(c, client.DB, id)
+	if err != nil {
+		c.IndentedJSON(404, gin.H{"message": err.Error()})
+		return
+	}
+
+	_, err = task.Delete(c, client.DB)
+	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
 
-	c.IndentedJSON(204, gin.H{"message": "deleted"})
+	c.IndentedJSON(204, gin.H{"message": "successfully deleted"})
 }
