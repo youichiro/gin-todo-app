@@ -209,7 +209,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
 		  WillReturnResult(sqlmock.NewResult(1, 1))
 
-		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy update task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy update task", "done": true}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 200, w.Code)
@@ -231,7 +231,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
 		  WillReturnError(fmt.Errorf("error"))
 
-		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task", "done": true}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 500, w.Code)
@@ -248,7 +248,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task", "done": true}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 404, w.Code)
@@ -262,7 +262,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		t.Parallel()
 		mockDB, _ := initMockDB(t)
 
-		w, c := createTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task", "done": true}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 400, w.Code)

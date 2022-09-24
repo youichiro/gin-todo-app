@@ -17,6 +17,7 @@ type createParams struct {
 
 type updateParams struct {
 	Title string `json:"title" binding:"required"`
+	Done bool `json:"done"`
 }
 
 func (t TaskHander) Index(c *gin.Context) {
@@ -76,6 +77,7 @@ func (t TaskHander) Update(c *gin.Context) {
 	}
 
 	task.Title = params.Title
+	task.Done = params.Done
 	_, err = task.Update(c, client.DB, boil.Infer())
 	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
