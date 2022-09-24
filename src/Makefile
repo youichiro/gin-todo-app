@@ -1,4 +1,4 @@
 sqlboiler:
 	sqlboiler psql
 test:
-	go test ./... --shuffle=on
+	go test ./... --shuffle=on -p=2
