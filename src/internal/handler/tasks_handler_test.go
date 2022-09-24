@@ -123,7 +123,7 @@ func TestTaskHandlerShow(t *testing.T) {
 		body, _ := io.ReadAll(w.Body)
 		err := json.Unmarshal(body, &task)
 		assert.NoError(t, err)
-		opt := cmpopts.IgnoreFields(task, "CreatedAt", "UpdatedAt")
+		opt := cmpopts.IgnoreFields(models.Task{}, "CreatedAt", "UpdatedAt")
 		expectBody := models.Task{ID: 3, Title: "dummy task3", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, opt))
 
@@ -172,7 +172,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 		body, _ := io.ReadAll(w.Body)
 		err = json.Unmarshal(body, &task)
 		assert.NoError(t, err)
-		opt := cmpopts.IgnoreFields(task, "CreatedAt", "UpdatedAt")
+		opt := cmpopts.IgnoreFields(models.Task{}, "CreatedAt", "UpdatedAt")
 		expectBody := models.Task{ID: 0, Title: "dummy insert task", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, opt))
 
