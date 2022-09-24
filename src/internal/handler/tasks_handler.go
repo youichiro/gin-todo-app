@@ -67,15 +67,19 @@ func (t TaskHander) Create(c *gin.Context) {
 func (t TaskHander) Update(c *gin.Context) {
 	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
+	fmt.Println("===")
+	fmt.Println(id)
 
 	var params updateParams
 	err := c.BindJSON(&params)
+	fmt.Println(params.Title)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
 
 	task, err := models.FindTask(c, client.DB, id)
+	fmt.Println(task)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return

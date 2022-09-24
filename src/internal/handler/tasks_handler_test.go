@@ -153,6 +153,7 @@ func TestTaskHandlerShow(t *testing.T) {
 
 func TestTaskHandlerCreate(t *testing.T) {
 	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
@@ -198,6 +199,83 @@ func TestTaskHandlerCreate(t *testing.T) {
 		mockDB, _ := InitMockDB(t)
 
 		w, c := CreateTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
+		TaskHander{}.Create(c)
+
+		assert.Equal(t, 400, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+}
+
+func TestTaskHandlerUpdate(t *testing.T) {
+	t.Run("正常系", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
+
+		// mock update exec
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
+		  WillReturnResult(sqlmock.NewResult(1, 1))
+
+		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy update task"}`)
+		TaskHander{}.Update(c)
+
+		assert.Equal(t, 200, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
+	t.Run("異常系_UPDATEに失敗した場合", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
+
+		// mock update exec
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
+		  WillReturnError(fmt.Errorf("error"))
+
+		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		TaskHander{}.Update(c)
+
+		assert.Equal(t, 500, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
+	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
+
+		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		TaskHander{}.Update(c)
+
+		assert.Equal(t, 404, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
+	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
+		t.Parallel()
+		mockDB, _ := InitMockDB(t)
+
+		w, c := CreateTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
