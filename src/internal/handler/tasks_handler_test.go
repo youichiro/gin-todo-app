@@ -141,6 +141,7 @@ func TestTaskHandlerShow(t *testing.T) {
 
 func TestTaskHandlerCreate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		defer mockDB.Close()
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
@@ -170,6 +171,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
+		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		defer mockDB.Close()
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
@@ -190,6 +192,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
+		t.Parallel()
 		mockDB, _ := InitMockDB(t)
 		defer mockDB.Close()
 
