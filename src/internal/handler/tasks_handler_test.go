@@ -57,10 +57,7 @@ func CreateTestContext(method string, path string, jsonString string) (*httptest
 }
 
 func TestTaskHandlerIndex(t *testing.T) {
-	t.Parallel()
-
 	t.Run("正常系", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		rows := mock.NewRows([]string{"id", "title", "done"})
 		rows.AddRow(0, "dummy task1", false)
@@ -90,7 +87,6 @@ func TestTaskHandlerIndex(t *testing.T) {
 	})
 
 	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
@@ -107,10 +103,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 }
 
 func TestTaskHandlerShow(t *testing.T) {
-	t.Parallel()
-
 	t.Run("正常系", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
@@ -135,7 +128,6 @@ func TestTaskHandlerShow(t *testing.T) {
 	})
 
 	t.Run("異常系_レコードが存在しない場合", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
@@ -152,10 +144,7 @@ func TestTaskHandlerShow(t *testing.T) {
 }
 
 func TestTaskHandlerCreate(t *testing.T) {
-	t.Parallel()
-
 	t.Run("正常系", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
@@ -179,7 +168,6 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
-		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
@@ -195,7 +183,6 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
-		t.Parallel()
 		mockDB, _ := InitMockDB(t)
 
 		w, c := CreateTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
