@@ -263,7 +263,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		mockDB, _ := InitMockDB(t)
 
 		w, c := CreateTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task"}`)
-		TaskHander{}.Create(c)
+		TaskHander{}.Update(c)
 
 		assert.Equal(t, 400, w.Code)
 

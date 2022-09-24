@@ -58,5 +58,5 @@ func TestTasksRoute(t *testing.T) {
 	body, _ := io.ReadAll(res.Body)
 	err = json.Unmarshal(body, &tasks)
 	assert.NoError(t, err)
-	assert.Equal(t, "sample task1", tasks[0].Title)
+	assert.Equal(t, "hoge", tasks[0].Title)
 }
