@@ -13,11 +13,11 @@ import (
 type TaskHander struct{}
 
 type createParams struct {
-	Title string `json:"title"`
+	Title string `json:"title" binding:"required"`
 }
 
 type updateParams struct {
-	Title string `json:"title"`
+	Title string `json:"title" binding:"required"`
 }
 
 func (t TaskHander) Index(c *gin.Context) {
@@ -45,6 +45,7 @@ func (t TaskHander) Create(c *gin.Context) {
 	boil.DebugMode = true
 	var params createParams
 	err := c.BindJSON(&params)
+	fmt.Println(params)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
@@ -56,10 +57,6 @@ func (t TaskHander) Create(c *gin.Context) {
 	}
 
 	err = task.Insert(c, client.DB, boil.Infer())
-
-	fmt.Println(task)
-	fmt.Println(err)
-
 	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
