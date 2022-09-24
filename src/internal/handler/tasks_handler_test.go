@@ -107,6 +107,24 @@ func TestTaskHandlerIndex(t *testing.T) {
 
 func TestTaskHandlerShow(t *testing.T) {
 	t.Parallel()
+
+	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+		mockDB, mock := InitMockDB(t)
+		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
+
+		w, c := CreateTestContext("GET", "/tasks/3", "")
+		TaskHander{}.Show(c)
+
+		assert.Equal(t, 200, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
 	tests := []struct {
 		name         string
 		expectStatus int
