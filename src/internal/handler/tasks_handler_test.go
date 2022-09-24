@@ -35,27 +35,54 @@ func InitMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 }
 
 func TestTaskHandlerIndex(t *testing.T) {
-	mockDB, mock := InitMockDB(t); defer mockDB.Close()
+	tests := []struct {
+		name string
+		expectStatus int
+		expectBody string
+		expectError bool
+	}{
+		{
+			name: "正常系",
+			expectStatus: 200,
+			expectBody: `[
+				{"id": 1, "title": "dummy task1", "done": false, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"},
+				{"id": 2, "title": "dummy task2", "done": true, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"}
+			]`,
+			expectError: false,
+		},
+		{
+			name: "異常系",
+			expectStatus: 404,
+			expectError: true,
+		},
+	}
 
-	rows := mock.NewRows([]string{"id", "title", "done"})
-	rows.AddRow(1, "dummy task1", false)
-	rows.AddRow(2, "dummy task2", true)
-	query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
-	mock.ExpectQuery(query).WillReturnRows(rows)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB, mock := InitMockDB(t); defer mockDB.Close()
+			rows := mock.NewRows([]string{"id", "title", "done"})
+			rows.AddRow(1, "dummy task1", false)
+			rows.AddRow(2, "dummy task2", true)
+			query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
+			if tt.expectError {
+				mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
+			} else {
+				mock.ExpectQuery(query).WillReturnRows(rows)
+			}
 
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest("GET", "/tasks", nil)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest("GET", "/tasks", nil)
 
-	TaskHander{}.Index(c)
+			TaskHander{}.Index(c)
 
-	assert.NoError(t, mock.ExpectationsWereMet())
-	assert.Equal(t, 200, w.Code)
-	expected := `[
-		{"id": 1, "title": "dummy task1", "done": false, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"},
-		{"id": 2, "title": "dummy task2", "done": true, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"}
-	]`
-	assert.JSONEq(t, expected, w.Body.String())
+			assert.NoError(t, mock.ExpectationsWereMet())
+			assert.Equal(t, tt.expectStatus, w.Code)
+			if tt.expectError == false {
+				assert.JSONEq(t, tt.expectBody, w.Body.String())
+			}
+		})
+	}
 }
 
 func TestTaskHandlerShow(t *testing.T) {
