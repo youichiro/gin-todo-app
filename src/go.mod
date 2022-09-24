@@ -1,4 +1,4 @@
-module example/web-service-gin
+module github.com/youichiro/go-todo-app
 
 go 1.17
 

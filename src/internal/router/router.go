@@ -1,7 +1,7 @@
 package router
 
 import (
-	"example/web-service-gin/internal/handler"
+	"github.com/youichiro/go-todo-app/internal/handler"
 
 	"github.com/gin-gonic/gin"
 )

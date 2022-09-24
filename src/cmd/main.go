@@ -1,8 +1,8 @@
 package main
 
 import (
-	"example/web-service-gin/internal/client"
-	"example/web-service-gin/internal/router"
+	"github.com/youichiro/go-todo-app/internal/client"
+	"github.com/youichiro/go-todo-app/internal/router"
 	"log"
 	"os"
 

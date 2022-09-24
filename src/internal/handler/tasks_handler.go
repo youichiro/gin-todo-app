@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"example/web-service-gin/internal/client"
-	"example/web-service-gin/internal/models"
+	"github.com/youichiro/go-todo-app/internal/client"
+	"github.com/youichiro/go-todo-app/internal/models"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
