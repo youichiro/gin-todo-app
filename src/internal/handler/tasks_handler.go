@@ -3,6 +3,7 @@ package handler
 import (
 	"example/web-service-gin/internal/client"
 	"example/web-service-gin/internal/models"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -41,6 +42,7 @@ func (t TaskHander) Show(c *gin.Context) {
 }
 
 func (t TaskHander) Create(c *gin.Context) {
+	boil.DebugMode = true
 	var params createParams
 	err := c.BindJSON(&params)
 	if err != nil {
@@ -54,14 +56,19 @@ func (t TaskHander) Create(c *gin.Context) {
 	}
 
 	err = task.Insert(c, client.DB, boil.Infer())
+
+	fmt.Println(task)
+	fmt.Println(err)
+
 	if err != nil {
-		c.IndentedJSON(400, gin.H{"message": err.Error()})
+		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
 	c.IndentedJSON(201, task)
 }
 
 func (t TaskHander) Update(c *gin.Context) {
+	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 
 	var params updateParams
@@ -80,13 +87,14 @@ func (t TaskHander) Update(c *gin.Context) {
 	task.Title = params.Title
 	_, err = task.Update(c, client.DB, boil.Infer())
 	if err != nil {
-		c.IndentedJSON(400, gin.H{"message": err.Error()})
+		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
 	}
 	c.IndentedJSON(200, gin.H{"message": "successfully updated"})
 }
 
 func (t TaskHander) Delete(c *gin.Context) {
+	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 
 	task, err := models.FindTask(c, client.DB, id)
