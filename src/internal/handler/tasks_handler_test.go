@@ -59,6 +59,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockDB, mock := InitMockDB(t)
 			defer mockDB.Close()
 			rows := mock.NewRows([]string{"id", "title", "done"})
@@ -108,6 +109,7 @@ func TestTaskHandlerShow(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockDB, mock := InitMockDB(t)
 			defer mockDB.Close()
 			rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
