@@ -40,59 +40,73 @@ func InitMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	return mockDB, mock
 }
 
+func CreateTestContext(method string, path string, jsonString string) (*httptest.ResponseRecorder, *gin.Context) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	if jsonString != "" {
+		c.Request = httptest.NewRequest(method, path, bytes.NewBuffer([]byte(jsonString)))
+	} else {
+		c.Request = httptest.NewRequest(method, path, nil)
+	}
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	return w, c
+}
+
 func TestTaskHandlerIndex(t *testing.T) {
-	tests := []struct {
-		name         string
-		expectStatus int
-		expectBody   string
-		expectError  bool
-	}{
-		{
-			name:         "正常系",
-			expectStatus: 200,
-			expectBody: `[
-				{"id": 1, "title": "dummy task1", "done": false, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"},
-				{"id": 2, "title": "dummy task2", "done": true, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"}
-			]`,
-			expectError: false,
-		},
-		{
-			name:         "異常系",
-			expectStatus: 404,
-			expectError:  true,
-		},
-	}
+	t.Parallel()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			mockDB, mock := InitMockDB(t)
-			defer mockDB.Close()
-			rows := mock.NewRows([]string{"id", "title", "done"})
-			rows.AddRow(1, "dummy task1", false)
-			rows.AddRow(2, "dummy task2", true)
-			query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
-			if tt.expectError {
-				mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
-			} else {
-				mock.ExpectQuery(query).WillReturnRows(rows)
-			}
+	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+		mockDB, mock := InitMockDB(t)
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = httptest.NewRequest("GET", "/tasks", nil)
+		rows := mock.NewRows([]string{"id", "title", "done"})
+		rows.AddRow(0, "dummy task1", false)
+		rows.AddRow(1, "dummy task2", true)
+		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
 
-			TaskHander{}.Index(c)
+		w, c := CreateTestContext("GET", "/tasks", "")
+		TaskHander{}.Index(c)
 
-			assert.Equal(t, tt.expectStatus, w.Code)
-			if tt.expectError == false {
-				assert.JSONEq(t, tt.expectBody, w.Body.String())
-			}
+		assert.Equal(t, 200, w.Code)
+
+		var tasks []models.Task
+		body, _ := io.ReadAll(w.Body)
+		err := json.Unmarshal(body, &tasks)
+		assert.NoError(t, err)
+		opt := cmpopts.IgnoreFields(tasks[0], "CreatedAt", "UpdatedAt")
+		expectBodyFirst := models.Task{ID: 0, Title: "dummy task1", Done: false}
+		expectBodySecond := models.Task{ID: 1, Title: "dummy task2", Done: true}
+		assert.Equal(t, 2, len(tasks))
+		assert.Empty(t, cmp.Diff(expectBodyFirst, tasks[0], opt))
+		assert.Empty(t, cmp.Diff(expectBodySecond, tasks[1], opt))
+
+		t.Cleanup(func() {
+			mockDB.Close()
 		})
-	}
+	})
+
+	t.Run("異常系_SELECTに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+		mockDB, mock := InitMockDB(t)
+
+		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
+		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
+
+		w, c := CreateTestContext("GET", "/tasks", "")
+		TaskHander{}.Index(c)
+
+		assert.Equal(t, 404, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
 }
 
 func TestTaskHandlerShow(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		expectStatus int
@@ -116,7 +130,6 @@ func TestTaskHandlerShow(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			mockDB, mock := InitMockDB(t)
-			defer mockDB.Close()
 			rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
 			query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 			if tt.expectError {
@@ -135,15 +148,20 @@ func TestTaskHandlerShow(t *testing.T) {
 			if tt.expectError == false {
 				assert.JSONEq(t, tt.expectBody, w.Body.String())
 			}
+
+			t.Cleanup(func() {
+				mockDB.Close()
+			})
 		})
 	}
 }
 
 func TestTaskHandlerCreate(t *testing.T) {
+	t.Parallel()
 	t.Run("正常系", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
-		defer mockDB.Close()
+
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
@@ -152,11 +170,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 		jsonString, err := json.Marshal(d)
 		assert.NoError(t, err)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(jsonString))
-		c.Request.Header.Set("Content-Type", "application/json")
-
+		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 201, w.Code)
@@ -168,12 +182,15 @@ func TestTaskHandlerCreate(t *testing.T) {
 		opt := cmpopts.IgnoreFields(task, "CreatedAt", "UpdatedAt")
 		expectBody := models.Task{ID: 0, Title: "dummy insert task", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, opt))
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
-		defer mockDB.Close()
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
@@ -181,32 +198,31 @@ func TestTaskHandlerCreate(t *testing.T) {
 		jsonString, err := json.Marshal(d)
 		assert.NoError(t, err)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(jsonString))
-		c.Request.Header.Set("Content-Type", "application/json")
-
+		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 500, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
 		t.Parallel()
 		mockDB, _ := InitMockDB(t)
-		defer mockDB.Close()
 
 		d := struct{ InvalidTitle string }{InvalidTitle: "invalid title"}
 		jsonString, err := json.Marshal(d)
 		assert.NoError(t, err)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(jsonString))
-		c.Request.Header.Set("Content-Type", "application/json")
-
+		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
 	})
 }
