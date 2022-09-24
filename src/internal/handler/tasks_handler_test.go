@@ -272,3 +272,66 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		})
 	})
 }
+
+func TestTaskHandlerDelete(t *testing.T) {
+	t.Run("正常系", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
+
+		// mock delete exec
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
+		  WillReturnResult(sqlmock.NewResult(1, 1))
+
+		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		TaskHander{}.Delete(c)
+
+		assert.Equal(t, 204, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
+	t.Run("異常系_DELETEに失敗した場合", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnRows(rows)
+
+		// mock update exec
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
+		  WillReturnError(fmt.Errorf("error"))
+
+		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		TaskHander{}.Delete(c)
+
+		assert.Equal(t, 500, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+
+	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
+		mockDB, mock := InitMockDB(t)
+
+		// mock find query
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
+
+		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		TaskHander{}.Delete(c)
+
+		assert.Equal(t, 404, w.Code)
+
+		t.Cleanup(func() {
+			mockDB.Close()
+		})
+	})
+}
