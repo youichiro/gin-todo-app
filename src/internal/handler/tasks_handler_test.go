@@ -87,7 +87,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 		})
 	})
 
-	t.Run("異常系_SELECTに失敗した場合", func(t *testing.T) {
+	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
 
@@ -119,59 +119,34 @@ func TestTaskHandlerShow(t *testing.T) {
 		TaskHander{}.Show(c)
 
 		assert.Equal(t, 200, w.Code)
+		var task models.Task
+		body, _ := io.ReadAll(w.Body)
+		err := json.Unmarshal(body, &task)
+		assert.NoError(t, err)
+		opt := cmpopts.IgnoreFields(task, "CreatedAt", "UpdatedAt")
+		expectBody := models.Task{ID: 3, Title: "dummy task3", Done: false}
+		assert.Empty(t, cmp.Diff(expectBody, task, opt))
 
 		t.Cleanup(func() {
 			mockDB.Close()
 		})
 	})
 
-	tests := []struct {
-		name         string
-		expectStatus int
-		expectBody   string
-		expectError  bool
-	}{
-		{
-			name:         "正常系",
-			expectStatus: 200,
-			expectBody:   `{"id": 3, "title": "dummy task3", "done": false, "created_at": "0001-01-01T00:00:00Z", "updated_at": "0001-01-01T00:00:00Z"}`,
-			expectError:  false,
-		},
-		{
-			name:         "異常系",
-			expectStatus: 404,
-			expectError:  true,
-		},
-	}
+	t.Run("異常系_レコードが存在しない場合", func(t *testing.T) {
+		t.Parallel()
+		mockDB, mock := InitMockDB(t)
+		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
+		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			mockDB, mock := InitMockDB(t)
-			rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
-			query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
-			if tt.expectError {
-				mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
-			} else {
-				mock.ExpectQuery(query).WillReturnRows(rows)
-			}
+		w, c := CreateTestContext("GET", "/tasks/3", "")
+		TaskHander{}.Show(c)
 
-			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request = httptest.NewRequest("GET", "/tasks/3", nil)
+		assert.Equal(t, 404, w.Code)
 
-			TaskHander{}.Show(c)
-
-			assert.Equal(t, tt.expectStatus, w.Code)
-			if tt.expectError == false {
-				assert.JSONEq(t, tt.expectBody, w.Body.String())
-			}
-
-			t.Cleanup(func() {
-				mockDB.Close()
-			})
+		t.Cleanup(func() {
+			mockDB.Close()
 		})
-	}
+	})
 }
 
 func TestTaskHandlerCreate(t *testing.T) {
