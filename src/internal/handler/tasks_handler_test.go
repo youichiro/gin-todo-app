@@ -19,6 +19,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var cmpOption cmp.Option
+
 func TestMain(m *testing.M) {
 	setup()
 	m.Run()
@@ -27,6 +29,7 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	fmt.Println("setup")
+	cmpOption = cmpopts.IgnoreFields(models.Task{}, "CreatedAt", "UpdatedAt")
 }
 
 func teardown() {
@@ -75,12 +78,11 @@ func TestTaskHandlerIndex(t *testing.T) {
 		body, _ := io.ReadAll(w.Body)
 		err := json.Unmarshal(body, &tasks)
 		assert.NoError(t, err)
-		opt := cmpopts.IgnoreFields(models.Task{}, "CreatedAt", "UpdatedAt")
 		expectBodyFirst := models.Task{ID: 0, Title: "dummy task1", Done: false}
 		expectBodySecond := models.Task{ID: 1, Title: "dummy task2", Done: true}
 		assert.Equal(t, 2, len(tasks))
-		assert.Empty(t, cmp.Diff(expectBodyFirst, tasks[0], opt))
-		assert.Empty(t, cmp.Diff(expectBodySecond, tasks[1], opt))
+		assert.Empty(t, cmp.Diff(expectBodyFirst, tasks[0], cmpOption))
+		assert.Empty(t, cmp.Diff(expectBodySecond, tasks[1], cmpOption))
 
 		t.Cleanup(func() {
 			mockDB.Close()
