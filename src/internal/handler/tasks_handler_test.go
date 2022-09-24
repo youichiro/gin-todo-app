@@ -36,14 +36,14 @@ func teardown() {
 	fmt.Println("teardown")
 }
 
-func InitMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
+func initMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	mockDB, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	client.DB = mockDB
 	return mockDB, mock
 }
 
-func CreateTestContext(method string, path string, jsonString string) (*httptest.ResponseRecorder, *gin.Context) {
+func createTestContext(method string, path string, jsonString string) (*httptest.ResponseRecorder, *gin.Context) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	if jsonString != "" {
@@ -58,14 +58,14 @@ func CreateTestContext(method string, path string, jsonString string) (*httptest
 
 func TestTaskHandlerIndex(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		rows := mock.NewRows([]string{"id", "title", "done"})
 		rows.AddRow(0, "dummy task1", false)
 		rows.AddRow(1, "dummy task2", true)
 		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
-		w, c := CreateTestContext("GET", "/tasks", "")
+		w, c := createTestContext("GET", "/tasks", "")
 		TaskHander{}.Index(c)
 
 		assert.Equal(t, 200, w.Code)
@@ -87,11 +87,11 @@ func TestTaskHandlerIndex(t *testing.T) {
 	})
 
 	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("GET", "/tasks", "")
+		w, c := createTestContext("GET", "/tasks", "")
 		TaskHander{}.Index(c)
 
 		assert.Equal(t, 404, w.Code)
@@ -104,12 +104,12 @@ func TestTaskHandlerIndex(t *testing.T) {
 
 func TestTaskHandlerShow(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
-		w, c := CreateTestContext("GET", "/tasks/3", "")
+		w, c := createTestContext("GET", "/tasks/3", "")
 		TaskHander{}.Show(c)
 
 		assert.Equal(t, 200, w.Code)
@@ -128,11 +128,11 @@ func TestTaskHandlerShow(t *testing.T) {
 	})
 
 	t.Run("異常系_レコードが存在しない場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("GET", "/tasks/3", "")
+		w, c := createTestContext("GET", "/tasks/3", "")
 		TaskHander{}.Show(c)
 
 		assert.Equal(t, 404, w.Code)
@@ -145,12 +145,12 @@ func TestTaskHandlerShow(t *testing.T) {
 
 func TestTaskHandlerCreate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
-		w, c := CreateTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 201, w.Code)
@@ -168,11 +168,11 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 500, w.Code)
@@ -183,9 +183,9 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
-		mockDB, _ := InitMockDB(t)
+		mockDB, _ := initMockDB(t)
 
-		w, c := CreateTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
+		w, c := createTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
@@ -198,7 +198,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 
 func TestTaskHandlerUpdate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -209,7 +209,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
 		  WillReturnResult(sqlmock.NewResult(1, 1))
 
-		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy update task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy update task"}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 200, w.Code)
@@ -220,7 +220,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_UPDATEに失敗した場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -231,7 +231,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
 		  WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 500, w.Code)
@@ -242,13 +242,13 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task"}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 404, w.Code)
@@ -260,9 +260,9 @@ func TestTaskHandlerUpdate(t *testing.T) {
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
 		t.Parallel()
-		mockDB, _ := InitMockDB(t)
+		mockDB, _ := initMockDB(t)
 
-		w, c := CreateTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task"}`)
+		w, c := createTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task"}`)
 		TaskHander{}.Update(c)
 
 		assert.Equal(t, 400, w.Code)
@@ -275,7 +275,7 @@ func TestTaskHandlerUpdate(t *testing.T) {
 
 func TestTaskHandlerDelete(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -286,7 +286,7 @@ func TestTaskHandlerDelete(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
 		  WillReturnResult(sqlmock.NewResult(1, 1))
 
-		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		w, c := createTestContext("DELETE", "/tasks/1", "")
 		TaskHander{}.Delete(c)
 
 		assert.Equal(t, 204, w.Code)
@@ -297,7 +297,7 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_DELETEに失敗した場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -308,7 +308,7 @@ func TestTaskHandlerDelete(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
 		  WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		w, c := createTestContext("DELETE", "/tasks/1", "")
 		TaskHander{}.Delete(c)
 
 		assert.Equal(t, 500, w.Code)
@@ -319,13 +319,13 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
-		mockDB, mock := InitMockDB(t)
+		mockDB, mock := initMockDB(t)
 
 		// mock find query
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		w, c := CreateTestContext("DELETE", "/tasks/1", "")
+		w, c := createTestContext("DELETE", "/tasks/1", "")
 		TaskHander{}.Delete(c)
 
 		assert.Equal(t, 404, w.Code)

@@ -30,9 +30,3 @@ func Connect(env string) {
 
 	DB = db
 }
-
-// func (p PostgresClientProvider) Close() {
-// 	if err := DB.Close(); err != nil {
-// 		panic(err)
-// 	}
-// }
