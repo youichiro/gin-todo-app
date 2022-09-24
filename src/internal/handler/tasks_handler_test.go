@@ -21,6 +21,10 @@ import (
 
 var cmpOption cmp.Option
 
+var dummyCreateParams struct {
+	DummyTitle
+}
+
 func TestMain(m *testing.M) {
 	setup()
 	m.Run()
@@ -62,7 +66,6 @@ func TestTaskHandlerIndex(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
-
 		rows := mock.NewRows([]string{"id", "title", "done"})
 		rows.AddRow(0, "dummy task1", false)
 		rows.AddRow(1, "dummy task2", true)
@@ -78,6 +81,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 		body, _ := io.ReadAll(w.Body)
 		err := json.Unmarshal(body, &tasks)
 		assert.NoError(t, err)
+
 		expectBodyFirst := models.Task{ID: 0, Title: "dummy task1", Done: false}
 		expectBodySecond := models.Task{ID: 1, Title: "dummy task2", Done: true}
 		assert.Equal(t, 2, len(tasks))
@@ -92,7 +96,6 @@ func TestTaskHandlerIndex(t *testing.T) {
 	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
-
 		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
@@ -121,10 +124,12 @@ func TestTaskHandlerShow(t *testing.T) {
 		TaskHander{}.Show(c)
 
 		assert.Equal(t, 200, w.Code)
+
 		var task models.Task
 		body, _ := io.ReadAll(w.Body)
 		err := json.Unmarshal(body, &task)
 		assert.NoError(t, err)
+
 		expectBody := models.Task{ID: 3, Title: "dummy task3", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, cmpOption))
 
@@ -155,13 +160,12 @@ func TestTaskHandlerCreate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
 		t.Parallel()
 		mockDB, mock := InitMockDB(t)
-
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
-		d := &createParams{Title: "dummy insert task"}
-		jsonString, err := json.Marshal(d)
+		// d := &createParams{Title: "dummy insert task"}
+		jsonString, err := json.Marshal(`{"title": "dummy insert task"}`)
 		assert.NoError(t, err)
 
 		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
@@ -209,7 +213,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 		jsonString, err := json.Marshal(d)
 		assert.NoError(t, err)
 
-		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
+		w, c := CreateTestContext("POST", "/tasks", string(jsonString)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
