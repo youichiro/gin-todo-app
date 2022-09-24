@@ -3,7 +3,6 @@ package handler
 import (
 	"example/web-service-gin/internal/client"
 	"example/web-service-gin/internal/models"
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +20,6 @@ type updateParams struct {
 }
 
 func (t TaskHander) Index(c *gin.Context) {
-	boil.DebugMode = true
 	tasks, err := models.Tasks().All(c, client.DB)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
@@ -31,7 +29,6 @@ func (t TaskHander) Index(c *gin.Context) {
 }
 
 func (t TaskHander) Show(c *gin.Context) {
-	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 	task, err := models.FindTask(c, client.DB, id)
 	if err != nil {
@@ -42,10 +39,8 @@ func (t TaskHander) Show(c *gin.Context) {
 }
 
 func (t TaskHander) Create(c *gin.Context) {
-	boil.DebugMode = true
 	var params createParams
 	err := c.BindJSON(&params)
-	fmt.Println(params)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
@@ -65,21 +60,16 @@ func (t TaskHander) Create(c *gin.Context) {
 }
 
 func (t TaskHander) Update(c *gin.Context) {
-	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
-	fmt.Println("===")
-	fmt.Println(id)
 
 	var params updateParams
 	err := c.BindJSON(&params)
-	fmt.Println(params.Title)
 	if err != nil {
 		c.IndentedJSON(400, gin.H{"message": err.Error()})
 		return
 	}
 
 	task, err := models.FindTask(c, client.DB, id)
-	fmt.Println(task)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
@@ -95,7 +85,6 @@ func (t TaskHander) Update(c *gin.Context) {
 }
 
 func (t TaskHander) Delete(c *gin.Context) {
-	boil.DebugMode = true
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 
 	task, err := models.FindTask(c, client.DB, id)
