@@ -75,7 +75,7 @@ func TestTaskHandlerIndex(t *testing.T) {
 		body, _ := io.ReadAll(w.Body)
 		err := json.Unmarshal(body, &tasks)
 		assert.NoError(t, err)
-		opt := cmpopts.IgnoreFields(tasks[0], "CreatedAt", "UpdatedAt")
+		opt := cmpopts.IgnoreFields(models.Task{}, "CreatedAt", "UpdatedAt")
 		expectBodyFirst := models.Task{ID: 0, Title: "dummy task1", Done: false}
 		expectBodySecond := models.Task{ID: 1, Title: "dummy task2", Done: true}
 		assert.Equal(t, 2, len(tasks))
