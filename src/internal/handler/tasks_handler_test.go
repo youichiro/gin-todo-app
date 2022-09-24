@@ -21,10 +21,6 @@ import (
 
 var cmpOption cmp.Option
 
-var dummyCreateParams struct {
-	DummyTitle
-}
-
 func TestMain(m *testing.M) {
 	setup()
 	m.Run()
@@ -164,18 +160,14 @@ func TestTaskHandlerCreate(t *testing.T) {
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
-		// d := &createParams{Title: "dummy insert task"}
-		jsonString, err := json.Marshal(`{"title": "dummy insert task"}`)
-		assert.NoError(t, err)
-
-		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
+		w, c := CreateTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 201, w.Code)
 
 		var task models.Task
 		body, _ := io.ReadAll(w.Body)
-		err = json.Unmarshal(body, &task)
+		err := json.Unmarshal(body, &task)
 		assert.NoError(t, err)
 		expectBody := models.Task{ID: 0, Title: "dummy insert task", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, cmpOption))
@@ -191,11 +183,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
-		d := &createParams{Title: "dummy insert task"}
-		jsonString, err := json.Marshal(d)
-		assert.NoError(t, err)
-
-		w, c := CreateTestContext("POST", "/tasks", string(jsonString))
+		w, c := CreateTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 500, w.Code)
@@ -209,11 +197,7 @@ func TestTaskHandlerCreate(t *testing.T) {
 		t.Parallel()
 		mockDB, _ := InitMockDB(t)
 
-		d := struct{ InvalidTitle string }{InvalidTitle: "invalid title"}
-		jsonString, err := json.Marshal(d)
-		assert.NoError(t, err)
-
-		w, c := CreateTestContext("POST", "/tasks", string(jsonString)
+		w, c := CreateTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
 		TaskHander{}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
