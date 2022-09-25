@@ -1,0 +1,45 @@
+name: run test
+
+on:
+  push:
+    branchs: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:13.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: go_todo_app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+          cache: true
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/$version/migrate.$platform-amd64.tar.gz | tar xvz
+          which migrate
+      - name: Run migraitons
+        run: migrate -database postgres://postgres:postgres@postgres:5432/go_todo_app_test?sslmode=disable -path ./migrate/db/migrations up
+      - name: Install dependencies
+        working-directory: ./api
+        run: go mod tidy
+      - name: Test
+        working-directory: ./api
+        run: go test ./... --shuffle=on -p=2 -cover
