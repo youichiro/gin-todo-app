@@ -4,11 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/youichiro/go-todo-app/internal/client"
-	"github.com/youichiro/go-todo-app/internal/router"
-
 	"github.com/joho/godotenv"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/youichiro/go-todo-app/internal/client"
+	"github.com/youichiro/go-todo-app/internal/router"
 )
 
 func main() {
