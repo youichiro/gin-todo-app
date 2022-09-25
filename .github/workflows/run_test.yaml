@@ -31,8 +31,7 @@ jobs:
           cache: true
           cache-dependency-path: api/go.sum
       - name: Install golang-migrate
-        run: |
-          /bin/bash -c "curl -L https://github.com/golang-migrate/migrate/releases/download/$version/migrate.$platform-amd64.tar.gz | tar xvz"
+        run: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
       - name: Run migraitons
         run: migrate -database postgres://postgres:postgres@postgres:5432/go_todo_app_test?sslmode=disable -path ./migrate/db/migrations up
       - name: Install dependencies
