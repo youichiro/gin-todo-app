@@ -1,15 +1,21 @@
 package router
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
+	"github.com/youichiro/go-todo-app/internal/client"
+	"github.com/youichiro/go-todo-app/internal/models"
 )
 
 func TestMain(m *testing.M) {
@@ -44,63 +50,66 @@ func TestHelloRoute(t *testing.T) {
 	assert.JSONEq(t, `{"message": "hello world!"}`, w.Body.String())
 }
 
-// func TestTasksCRUDRoute(t *testing.T) {
-// 	var task models.Task
-// 	var tasks []models.Task
-// 	client.Connect("test")
-// 	s := httptest.NewServer(SetupRouter())
+func TestTasksCRUDRoute(t *testing.T) {
+	var task models.Task
+	var tasks []models.Task
+	db := client.InitDB("test")
+	s := httptest.NewServer(SetupRouter(db))
+	httpClient := &http.Client{}
 
-// 	// post /tasks
-// 	res, err := http.Post(s.URL+"/tasks", "application/json", bytes.NewBuffer([]byte(`{"title": "new task"}`)))
-// 	assert.NoError(t, err)
-// 	defer res.Body.Close()
+	// post /tasks
+	res, err := http.Post(s.URL+"/tasks", "application/json", bytes.NewBuffer([]byte(`{"title": "new task"}`)))
+	assert.NoError(t, err)
+	defer res.Body.Close()
 
-// 	assert.Equal(t, 201, res.StatusCode)
-// 	body, _ := io.ReadAll(res.Body)
-// 	err = json.Unmarshal(body, &task)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, "new task", task.Title)
+	assert.Equal(t, 201, res.StatusCode)
+	body, _ := io.ReadAll(res.Body)
+	err = json.Unmarshal(body, &task)
+	assert.NoError(t, err)
+	assert.Equal(t, "new task", task.Title)
 
-// 	// get /tasks
-// 	res, err = http.Get(s.URL + "/tasks")
-// 	assert.NoError(t, err)
-// 	defer res.Body.Close()
+	// get /tasks
+	res, err = http.Get(s.URL + "/tasks")
+	assert.NoError(t, err)
+	defer res.Body.Close()
 
-// 	assert.Equal(t, 200, res.StatusCode)
-// 	body, _ = io.ReadAll(res.Body)
-// 	err = json.Unmarshal(body, &tasks)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, 1, len(tasks))
-// 	assert.Equal(t, "new task", tasks[0].Title)
+	assert.Equal(t, 200, res.StatusCode)
+	body, _ = io.ReadAll(res.Body)
+	err = json.Unmarshal(body, &tasks)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(tasks))
+	assert.Equal(t, "new task", tasks[0].Title)
 
-// 	// get /task/:id
-// 	res, err = http.Get(s.URL + "/task/" + strconv.Itoa(tasks[0].ID))
-// 	assert.NoError(t, err)
-// 	defer res.Body.Close()
+	// put /tasks/:id
+	req, err := http.NewRequest("PUT", s.URL+"/tasks/"+strconv.Itoa(tasks[0].ID), bytes.NewBuffer([]byte(`{"title": "update task"}`)))
+	assert.NoError(t, err)
+	res, err = httpClient.Do(req)
+	assert.NoError(t, err)
+	defer res.Body.Close()
 
-// 	assert.Equal(t, 200, res.StatusCode)
-// 	body, _ = io.ReadAll(res.Body)
-// 	err = json.Unmarshal(body, &task)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, "new task", task.Title)
+	assert.Equal(t, 200, res.StatusCode)
 
-// 	// put /task/:id
-// 	httpClient := &http.Client{}
-// 	req, err := http.NewRequest("PUT", s.URL+"/task/"+strconv.Itoa(task.ID), bytes.NewBuffer([]byte(`{"title": "update task"}`)))
-// 	assert.NoError(t, err)
-// 	res, err = httpClient.Do(req)
-// 	assert.NoError(t, err)
-// 	defer res.Body.Close()
+	// get /tasks/:id
+	res, err = http.Get(s.URL + "/tasks/" + strconv.Itoa(tasks[0].ID))
+	assert.NoError(t, err)
+	defer res.Body.Close()
 
-// 	assert.Equal(t, 200, res.StatusCode)
-// 	body, _ = io.ReadAll(res.Body)
-// 	err = json.Unmarshal(body, &task)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, "update task", task.Title)
+	assert.Equal(t, 200, res.StatusCode)
+	body, _ = io.ReadAll(res.Body)
+	err = json.Unmarshal(body, &task)
+	assert.NoError(t, err)
+	assert.Equal(t, "update task", task.Title)
 
-// 	t.Cleanup(func() {
-// 		// tasksレコードを全て削除する
-// 		models.Tasks().DeleteAll(context.Background(), client.DB)
-// 		client.DB.Close()
-// 	})
-// }
+	// delete /tasks/:id
+	req, err = http.NewRequest("DELETE", s.URL+"/tasks/"+strconv.Itoa(task.ID), nil)
+	assert.NoError(t, err)
+	res, err = httpClient.Do(req)
+	assert.NoError(t, err)
+	defer res.Body.Close()
+
+	assert.Equal(t, 204, res.StatusCode)
+
+	t.Cleanup(func() {
+		db.Close()
+	})
+}
