@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/youichiro/go-todo-app/internal/client"
-	"github.com/youichiro/go-todo-app/internal/router"
 	"log"
 	"os"
+
+	"github.com/youichiro/go-todo-app/internal/client"
+	"github.com/youichiro/go-todo-app/internal/router"
 
 	"github.com/joho/godotenv"
 	"github.com/volatiletech/sqlboiler/boil"
