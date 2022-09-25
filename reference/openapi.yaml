@@ -12,7 +12,7 @@ paths:
   /tasks:
     parameters: []
     get:
-      summary: Get User Info by User ID
+      summary: Get All Tasks
       responses:
         '200':
           description: OK
