@@ -33,7 +33,7 @@ jobs:
       - name: Install golang-migrate
         run: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
       - name: Run migraitons
-        run: migrate -database postgres://postgres:postgres@postgres:5432/go_todo_app_test?sslmode=disable -path ./migrate/db/migrations up
+        run: migrate -database postgres://postgres:postgres@localhost:5432/go_todo_app_test?sslmode=disable -path ./migrate/db/migrations up
       - name: Install dependencies
         working-directory: api
         run: go mod tidy
