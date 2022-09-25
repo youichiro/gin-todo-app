@@ -37,6 +37,8 @@ func teardown() {
 }
 
 func TestHelloRoute(t *testing.T) {
+	t.Parallel()
+
 	mockDB, _, err := sqlmock.New()
 	assert.NoError(t, err)
 
@@ -51,6 +53,8 @@ func TestHelloRoute(t *testing.T) {
 }
 
 func TestTasksCRUDRoute(t *testing.T) {
+	t.Parallel()
+
 	var task models.Task
 	var tasks []models.Task
 	db := client.InitDB("test")
