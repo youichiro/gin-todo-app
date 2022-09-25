@@ -15,11 +15,11 @@ type TaskHander struct {
 }
 
 type createParams struct {
-	Title string `json:"title" binding:"required"`
+	Title string `json:"title" binding:"required,min=1"`
 }
 
 type updateParams struct {
-	Title string `json:"title" binding:"required"`
+	Title string `json:"title" binding:"required,min=1"`
 	Done  bool   `json:"done"`
 }
 
