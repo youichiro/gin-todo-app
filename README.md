@@ -59,3 +59,9 @@ sqlboiler psql
 
 ## OpenAPI
 https://stoplight.io/studio で編集する
+
+モックサーバーを立てる
+```sh
+docker compose up -d prism
+curl http://localhost:8081/tasks
+```
