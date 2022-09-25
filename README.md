@@ -65,3 +65,26 @@ https://stoplight.io/studio で編集する
 docker compose up -d prism
 curl http://localhost:8081/tasks
 ```
+
+## pre-commit hook
+install pre-commit
+https://pre-commit.com/
+
+```sh
+brew install pre-commit
+```
+
+set pre-commit-golang
+https://github.com/dnephin/pre-commit-golang
+
+create .pre-commit-config.yaml
+
+```sh
+pre-commit install
+```
+
+githook
+```sh
+git config --local core.hooksPath githooks
+chmod -R +x githooks/
+```
