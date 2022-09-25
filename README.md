@@ -29,7 +29,7 @@ docker compose run --rm migrate make create ARG=<seq>
 
 ## run test
 ```sh
-cd src
+cd api
 go test -v ./...
 
 # 特定のパッケージを指定する
@@ -38,7 +38,7 @@ go test -v ./path/to/package
 
 ## run server
 ```sh
-cd src/cmd
+cd api/cmd
 go run main.go
 curl http://localhost:8080
 ```
@@ -53,7 +53,7 @@ curl http://localhost:8080
 https://github.com/volatiletech/sqlboiler
 
 ```sh
-cd src
+cd api
 sqlboiler psql
 ```
 
