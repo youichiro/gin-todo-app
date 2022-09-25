@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +31,10 @@ func teardown() {
 }
 
 func TestHelloRoute(t *testing.T) {
-	r := SetupRouter()
+	mockDB, _, err := sqlmock.New()
+	assert.NoError(t, err)
+
+	r := SetupRouter(mockDB)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/", nil)
