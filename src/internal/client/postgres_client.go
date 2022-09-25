@@ -9,9 +9,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-var DB *sql.DB
-
-func Connect(env string) {
+func InitDB(env string) *sql.DB {
 	host := os.Getenv("DB_HOST")
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
@@ -28,5 +26,5 @@ func Connect(env string) {
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxLifetime(time.Hour)
 
-	DB = db
+	return db
 }

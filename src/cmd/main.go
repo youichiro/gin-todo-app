@@ -19,9 +19,9 @@ func main() {
 	env := os.Getenv("GO_ENV")
 
 	boil.DebugMode = true // なぜか効かない
-	client.Connect(env)
-	defer client.DB.Close()
+	db := client.InitDB(env)
+	defer db.Close()
 
-	r := router.SetupRouter()
+	r := router.SetupRouter(db)
 	r.Run("0.0.0.0:8080")
 }

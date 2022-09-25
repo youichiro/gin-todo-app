@@ -1,15 +1,18 @@
 package handler
 
 import (
-	"github.com/youichiro/go-todo-app/internal/client"
-	"github.com/youichiro/go-todo-app/internal/models"
+	"database/sql"
 	"strconv"
+
+	"github.com/youichiro/go-todo-app/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-type TaskHander struct{}
+type TaskHander struct {
+	DB *sql.DB
+}
 
 type createParams struct {
 	Title string `json:"title" binding:"required"`
@@ -17,11 +20,11 @@ type createParams struct {
 
 type updateParams struct {
 	Title string `json:"title" binding:"required"`
-	Done bool `json:"done"`
+	Done  bool   `json:"done"`
 }
 
 func (t TaskHander) Index(c *gin.Context) {
-	tasks, err := models.Tasks().All(c, client.DB)
+	tasks, err := models.Tasks().All(c, t.DB)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
@@ -31,7 +34,7 @@ func (t TaskHander) Index(c *gin.Context) {
 
 func (t TaskHander) Show(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
-	task, err := models.FindTask(c, client.DB, id)
+	task, err := models.FindTask(c, t.DB, id)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
@@ -52,7 +55,7 @@ func (t TaskHander) Create(c *gin.Context) {
 		Done:  false,
 	}
 
-	err = task.Insert(c, client.DB, boil.Infer())
+	err = task.Insert(c, t.DB, boil.Infer())
 	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
@@ -70,7 +73,7 @@ func (t TaskHander) Update(c *gin.Context) {
 		return
 	}
 
-	task, err := models.FindTask(c, client.DB, id)
+	task, err := models.FindTask(c, t.DB, id)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
@@ -78,7 +81,7 @@ func (t TaskHander) Update(c *gin.Context) {
 
 	task.Title = params.Title
 	task.Done = params.Done
-	_, err = task.Update(c, client.DB, boil.Infer())
+	_, err = task.Update(c, t.DB, boil.Infer())
 	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
@@ -89,13 +92,13 @@ func (t TaskHander) Update(c *gin.Context) {
 func (t TaskHander) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Params.ByName("id"))
 
-	task, err := models.FindTask(c, client.DB, id)
+	task, err := models.FindTask(c, t.DB, id)
 	if err != nil {
 		c.IndentedJSON(404, gin.H{"message": err.Error()})
 		return
 	}
 
-	_, err = task.Delete(c, client.DB)
+	_, err = task.Delete(c, t.DB)
 	if err != nil {
 		c.IndentedJSON(500, gin.H{"message": err.Error()})
 		return
