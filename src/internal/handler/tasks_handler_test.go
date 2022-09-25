@@ -56,7 +56,11 @@ func createTestContext(method string, path string, jsonString string) (*httptest
 }
 
 func TestTaskHandlerIndex(t *testing.T) {
+	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -88,6 +92,8 @@ func TestTaskHandlerIndex(t *testing.T) {
 	})
 
 	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -106,7 +112,11 @@ func TestTaskHandlerIndex(t *testing.T) {
 }
 
 func TestTaskHandlerShow(t *testing.T) {
+	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -133,6 +143,8 @@ func TestTaskHandlerShow(t *testing.T) {
 	})
 
 	t.Run("異常系_レコードが存在しない場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -151,7 +163,11 @@ func TestTaskHandlerShow(t *testing.T) {
 }
 
 func TestTaskHandlerCreate(t *testing.T) {
+	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -177,6 +193,8 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -194,6 +212,8 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, _, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -209,7 +229,11 @@ func TestTaskHandlerCreate(t *testing.T) {
 }
 
 func TestTaskHandlerUpdate(t *testing.T) {
+	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -233,6 +257,8 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_UPDATEに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -256,6 +282,8 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -274,6 +302,8 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, _, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -289,7 +319,11 @@ func TestTaskHandlerUpdate(t *testing.T) {
 }
 
 func TestTaskHandlerDelete(t *testing.T) {
+	t.Parallel()
+
 	t.Run("正常系", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -313,6 +347,8 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_DELETEに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
@@ -336,6 +372,8 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
+		t.Parallel()
+
 		mockDB, mock, err := sqlmock.New()
 		assert.NoError(t, err)
 
