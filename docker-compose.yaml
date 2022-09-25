@@ -21,5 +21,13 @@ services:
     environment:
       - POSTGRESQL_URL="postgres://postgres:postgres@postgres:5432/go_todo_app_${GO_ENV}?sslmode=disable"
 
+  prism:
+    image: stoplight/prism:4.10.3
+    command: 'mock -h 0.0.0.0 -p 8081 /tmp/openapi.yaml'
+    volumes:
+      - ./reference/openapi.yaml:/tmp/openapi.yaml
+    ports:
+      - '8081:8081'
+
 volumes:
   db_data:

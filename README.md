@@ -56,3 +56,6 @@ https://github.com/volatiletech/sqlboiler
 cd src
 sqlboiler psql
 ```
+
+## OpenAPI
+https://stoplight.io/studio で編集する
