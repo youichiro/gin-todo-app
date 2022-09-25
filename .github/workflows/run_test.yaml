@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         working-directory: api
         run: go mod tidy
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Test
         working-directory: api
         run: go test ./... --shuffle=on -p=2 -cover
