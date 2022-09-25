@@ -25,7 +25,7 @@ services:
     image: stoplight/prism:4.10.3
     command: 'mock -h 0.0.0.0 -p 8081 /tmp/openapi.yaml'
     volumes:
-      - ./reference/openapi.yaml:/tmp/openapi.yaml
+      - ./openapi/openapi.yaml:/tmp/openapi.yaml
     ports:
       - '8081:8081'
 
