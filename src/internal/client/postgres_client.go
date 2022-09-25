@@ -26,5 +26,10 @@ func InitDB(env string) *sql.DB {
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxLifetime(time.Hour)
 
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
 	return db
 }
