@@ -2,15 +2,14 @@ package handler
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
-	"github.com/youichiro/go-todo-app/internal/client"
-	"github.com/youichiro/go-todo-app/internal/models"
 	"fmt"
 	"io"
 	"net/http/httptest"
 	"regexp"
 	"testing"
+
+	"github.com/youichiro/go-todo-app/internal/models"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
@@ -36,12 +35,12 @@ func teardown() {
 	fmt.Println("teardown")
 }
 
-func initMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
-	mockDB, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	client.DB = mockDB
-	return mockDB, mock
-}
+// func initMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
+// 	mockDB, mock, err := sqlmock.New()
+// 	assert.NoError(t, err)
+// 	client.DB = mockDB
+// 	return mockDB, mock
+// }
 
 func createTestContext(method string, path string, jsonString string) (*httptest.ResponseRecorder, *gin.Context) {
 	w := httptest.NewRecorder()
@@ -58,7 +57,9 @@ func createTestContext(method string, path string, jsonString string) (*httptest
 
 func TestTaskHandlerIndex(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		rows := mock.NewRows([]string{"id", "title", "done"})
 		rows.AddRow(0, "dummy task1", false)
 		rows.AddRow(1, "dummy task2", true)
@@ -66,13 +67,13 @@ func TestTaskHandlerIndex(t *testing.T) {
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
 		w, c := createTestContext("GET", "/tasks", "")
-		TaskHander{}.Index(c)
+		TaskHander{DB: mockDB}.Index(c)
 
 		assert.Equal(t, 200, w.Code)
 
 		var tasks []models.Task
 		body, _ := io.ReadAll(w.Body)
-		err := json.Unmarshal(body, &tasks)
+		err = json.Unmarshal(body, &tasks)
 		assert.NoError(t, err)
 
 		expectBodyFirst := models.Task{ID: 0, Title: "dummy task1", Done: false}
@@ -87,12 +88,14 @@ func TestTaskHandlerIndex(t *testing.T) {
 	})
 
 	t.Run("異常系_SELECTに失敗する場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		query := regexp.QuoteMeta(`SELECT "tasks".* FROM "tasks"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("GET", "/tasks", "")
-		TaskHander{}.Index(c)
+		TaskHander{DB: mockDB}.Index(c)
 
 		assert.Equal(t, 404, w.Code)
 
@@ -104,19 +107,21 @@ func TestTaskHandlerIndex(t *testing.T) {
 
 func TestTaskHandlerShow(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(3, "dummy task3", false)
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
 		w, c := createTestContext("GET", "/tasks/3", "")
-		TaskHander{}.Show(c)
+		TaskHander{DB: mockDB}.Show(c)
 
 		assert.Equal(t, 200, w.Code)
 
 		var task models.Task
 		body, _ := io.ReadAll(w.Body)
-		err := json.Unmarshal(body, &task)
+		err = json.Unmarshal(body, &task)
 		assert.NoError(t, err)
 
 		expectBody := models.Task{ID: 3, Title: "dummy task3", Done: false}
@@ -128,12 +133,14 @@ func TestTaskHandlerShow(t *testing.T) {
 	})
 
 	t.Run("異常系_レコードが存在しない場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("GET", "/tasks/3", "")
-		TaskHander{}.Show(c)
+		TaskHander{DB: mockDB}.Show(c)
 
 		assert.Equal(t, 404, w.Code)
 
@@ -145,19 +152,21 @@ func TestTaskHandlerShow(t *testing.T) {
 
 func TestTaskHandlerCreate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		rows := mock.NewRows([]string{"id", "done"}).AddRow(0, false)
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnRows(rows)
 
 		w, c := createTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
-		TaskHander{}.Create(c)
+		TaskHander{DB: mockDB}.Create(c)
 
 		assert.Equal(t, 201, w.Code)
 
 		var task models.Task
 		body, _ := io.ReadAll(w.Body)
-		err := json.Unmarshal(body, &task)
+		err = json.Unmarshal(body, &task)
 		assert.NoError(t, err)
 		expectBody := models.Task{ID: 0, Title: "dummy insert task", Done: false}
 		assert.Empty(t, cmp.Diff(expectBody, task, cmpOption))
@@ -168,12 +177,14 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_INSERTに失敗した場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
+
 		query := regexp.QuoteMeta(`INSERT INTO "tasks" ("title","created_at","updated_at") VALUES ($1,$2,$3) RETURNING "id","done"`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("POST", "/tasks", `{"title": "dummy insert task"}`)
-		TaskHander{}.Create(c)
+		TaskHander{DB: mockDB}.Create(c)
 
 		assert.Equal(t, 500, w.Code)
 
@@ -183,10 +194,11 @@ func TestTaskHandlerCreate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
-		mockDB, _ := initMockDB(t)
+		mockDB, _, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		w, c := createTestContext("POST", "/tasks", `{"invalid_title": "invalid task"}`)
-		TaskHander{}.Create(c)
+		TaskHander{DB: mockDB}.Create(c)
 
 		assert.Equal(t, 400, w.Code)
 
@@ -198,7 +210,8 @@ func TestTaskHandlerCreate(t *testing.T) {
 
 func TestTaskHandlerUpdate(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -207,10 +220,10 @@ func TestTaskHandlerUpdate(t *testing.T) {
 
 		// mock update exec
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
-		  WillReturnResult(sqlmock.NewResult(1, 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy update task", "done": true}`)
-		TaskHander{}.Update(c)
+		TaskHander{DB: mockDB}.Update(c)
 
 		assert.Equal(t, 200, w.Code)
 
@@ -220,7 +233,8 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_UPDATEに失敗した場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -229,10 +243,10 @@ func TestTaskHandlerUpdate(t *testing.T) {
 
 		// mock update exec
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "tasks" SET "title"=$1,"done"=$2,"updated_at"=$3 WHERE "id"=$4`)).
-		  WillReturnError(fmt.Errorf("error"))
+			WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task", "done": true}`)
-		TaskHander{}.Update(c)
+		TaskHander{DB: mockDB}.Update(c)
 
 		assert.Equal(t, 500, w.Code)
 
@@ -242,14 +256,15 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("PUT", "/tasks/1", `{"title": "dummy insert task", "done": true}`)
-		TaskHander{}.Update(c)
+		TaskHander{DB: mockDB}.Update(c)
 
 		assert.Equal(t, 404, w.Code)
 
@@ -259,11 +274,11 @@ func TestTaskHandlerUpdate(t *testing.T) {
 	})
 
 	t.Run("異常系_リクエストパラメーターが間違えている場合", func(t *testing.T) {
-		t.Parallel()
-		mockDB, _ := initMockDB(t)
+		mockDB, _, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		w, c := createTestContext("PUT", "/tasks/1", `{"invalid_title": "invalid task", "done": true}`)
-		TaskHander{}.Update(c)
+		TaskHander{DB: mockDB}.Update(c)
 
 		assert.Equal(t, 400, w.Code)
 
@@ -275,7 +290,8 @@ func TestTaskHandlerUpdate(t *testing.T) {
 
 func TestTaskHandlerDelete(t *testing.T) {
 	t.Run("正常系", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -284,10 +300,10 @@ func TestTaskHandlerDelete(t *testing.T) {
 
 		// mock delete exec
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
-		  WillReturnResult(sqlmock.NewResult(1, 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		w, c := createTestContext("DELETE", "/tasks/1", "")
-		TaskHander{}.Delete(c)
+		TaskHander{DB: mockDB}.Delete(c)
 
 		assert.Equal(t, 204, w.Code)
 
@@ -297,7 +313,8 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_DELETEに失敗した場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		rows := mock.NewRows([]string{"id", "title", "done"}).AddRow(1, "dummy task", false)
@@ -306,10 +323,10 @@ func TestTaskHandlerDelete(t *testing.T) {
 
 		// mock update exec
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "tasks" WHERE "id"=$1`)).
-		  WillReturnError(fmt.Errorf("error"))
+			WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("DELETE", "/tasks/1", "")
-		TaskHander{}.Delete(c)
+		TaskHander{DB: mockDB}.Delete(c)
 
 		assert.Equal(t, 500, w.Code)
 
@@ -319,14 +336,15 @@ func TestTaskHandlerDelete(t *testing.T) {
 	})
 
 	t.Run("異常系_Findに失敗した場合", func(t *testing.T) {
-		mockDB, mock := initMockDB(t)
+		mockDB, mock, err := sqlmock.New()
+		assert.NoError(t, err)
 
 		// mock find query
 		query := regexp.QuoteMeta(`select * from "tasks" where "id"=$1`)
 		mock.ExpectQuery(query).WillReturnError(fmt.Errorf("error"))
 
 		w, c := createTestContext("DELETE", "/tasks/1", "")
-		TaskHander{}.Delete(c)
+		TaskHander{DB: mockDB}.Delete(c)
 
 		assert.Equal(t, 404, w.Code)
 
