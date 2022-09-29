@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http/httptest"
+	"os"
 	"regexp"
 	"testing"
 
@@ -22,8 +23,9 @@ var cmpOption cmp.Option
 
 func TestMain(m *testing.M) {
 	setup()
-	m.Run()
+	status := m.Run()
 	teardown()
+	os.Exit(status)
 }
 
 func setup() {

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 
@@ -20,8 +21,9 @@ import (
 
 func TestMain(m *testing.M) {
 	setup()
-	defer teardown()
-	m.Run()
+	status := m.Run()
+	teardown()
+	os.Exit(status)
 }
 
 func setup() {

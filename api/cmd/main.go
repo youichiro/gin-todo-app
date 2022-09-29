@@ -20,7 +20,12 @@ func main() {
 
 	boil.DebugMode = true // なぜか効かない
 	db := client.InitDB(env)
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}()
 
 	r := router.SetupRouter(db)
 	r.Run("0.0.0.0:8080")
