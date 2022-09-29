@@ -9,6 +9,25 @@ info:
 servers:
   - url: 'http://localhost:8080'
 paths:
+  /:
+    parameters: []
+    get:
+      summary: Get Hello World
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    message: hello world!
+      operationId: get-root
   /tasks:
     parameters: []
     get:
