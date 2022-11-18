@@ -21,3 +21,6 @@ coverage.html
 
 # node
 node_modules
+
+# docs
+_book

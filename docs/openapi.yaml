@@ -1,0 +1,80 @@
+openapi: 3.1.0
+x-stoplight:
+  id: eowborpk2l5ng
+info:
+  title: go-todo-app
+  version: '1.0'
+  summary: summary
+  description: hoge
+servers:
+  - url: 'http://localhost:8080'
+paths:
+  /:
+    parameters: []
+    get:
+      summary: Get Hello World
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    message: hello world!
+      operationId: get-root
+  /tasks:
+    parameters: []
+    get:
+      summary: Get All Tasks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+              examples:
+                example-1:
+                  value:
+                    - id: 1
+                      title: sample task
+                      done: false
+                      created_at: '2022-10-27 10:00:00'
+                      updated_at: '2022-10-27 10:00:00'
+      operationId: get-users-userId
+      description: get all tasks
+components:
+  schemas:
+    Task:
+      title: Task
+      x-stoplight:
+        id: q7cgf6o5cxpig
+      type: object
+      examples:
+        - id: 1
+          title: sample task
+          done: false
+          created_at: '2022-10-27 10:00:00'
+          updated_at: '2022-10-27 10:00:00'
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        done:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - title
